@@ -1,8 +1,8 @@
-import type { ProColumns } from '@ant-design/pro-components';
+import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
-import { useIntl } from '@umijs/max';
+import { FormattedMessage, useIntl } from '@umijs/max';
 import { App, Button, Form, Input, Modal, Popconfirm } from 'antd';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   createDeviceGroup,
   deleteDeviceGroup,
@@ -13,78 +13,139 @@ import {
 const DeviceGroupList: React.FC = () => {
   const intl = useIntl();
   const { message: msgApi } = App.useApp();
+  const actionRef = useRef<ActionType>();
   const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<API.DeviceGroupItem | null>(null);
   const [createForm] = Form.useForm();
+  const [editForm] = Form.useForm();
 
   const handleCreate = async (values: API.CreateDeviceGroupParams) => {
     try {
       await createDeviceGroup(values);
-      msgApi.success('Device group created');
+      msgApi.success(
+        intl.formatMessage({
+          id: 'pages.deviceGroups.createSuccess',
+          defaultMessage: 'Device group created',
+        }),
+      );
       setCreateModalVisible(false);
       createForm.resetFields();
+      actionRef.current?.reload();
     } catch {
-      msgApi.error('Failed to create device group');
+      msgApi.error(
+        intl.formatMessage({
+          id: 'pages.deviceGroups.createFailed',
+          defaultMessage: 'Failed to create device group',
+        }),
+      );
+    }
+  };
+
+  const handleEdit = async (guid: string, values: API.UpdateDeviceGroupParams) => {
+    try {
+      await updateDeviceGroup(guid, values);
+      msgApi.success(
+        intl.formatMessage({
+          id: 'pages.deviceGroups.updateSuccess',
+          defaultMessage: 'Device group updated',
+        }),
+      );
+      setEditModalVisible(false);
+      setEditingRecord(null);
+      editForm.resetFields();
+      actionRef.current?.reload();
+    } catch {
+      msgApi.error(
+        intl.formatMessage({
+          id: 'pages.deviceGroups.updateFailed',
+          defaultMessage: 'Failed to update device group',
+        }),
+      );
     }
   };
 
   const handleDelete = async (guid: string) => {
     try {
       await deleteDeviceGroup(guid);
-      msgApi.success('Device group deleted');
+      msgApi.success(
+        intl.formatMessage({
+          id: 'pages.deviceGroups.deleteSuccess',
+          defaultMessage: 'Device group deleted',
+        }),
+      );
+      actionRef.current?.reload();
     } catch {
-      msgApi.error('Failed to delete device group');
+      msgApi.error(
+        intl.formatMessage({
+          id: 'pages.deviceGroups.deleteFailed',
+          defaultMessage: 'Failed to delete device group',
+        }),
+      );
     }
   };
 
   const columns: ProColumns<API.DeviceGroupItem>[] = [
     {
-      title: intl.formatMessage({
-        id: 'pages.deviceGroups.name',
-        defaultMessage: 'Name',
-      }),
+      title: <FormattedMessage id="pages.deviceGroups.name" defaultMessage="Name" />,
       dataIndex: 'name',
     },
     {
-      title: intl.formatMessage({
-        id: 'pages.deviceGroups.note',
-        defaultMessage: 'Note',
-      }),
+      title: <FormattedMessage id="pages.deviceGroups.note" defaultMessage="Note" />,
       dataIndex: 'note',
+      ellipsis: true,
     },
     {
-      title: intl.formatMessage({
-        id: 'pages.deviceGroups.deviceCount',
-        defaultMessage: 'Device Count',
-      }),
+      title: (
+        <FormattedMessage id="pages.deviceGroups.deviceCount" defaultMessage="Device Count" />
+      ),
       dataIndex: 'device_count',
+      width: 120,
     },
     {
-      title: intl.formatMessage({
-        id: 'pages.common.action',
-        defaultMessage: 'Action',
-      }),
+      title: <FormattedMessage id="pages.common.action" defaultMessage="Action" />,
       valueType: 'option',
-      render: (_, record) => [
-        <Popconfirm
-          key="delete"
-          title="Are you sure to delete this device group?"
-          onConfirm={() => handleDelete(record.guid)}
-        >
-          <Button type="link" size="small" danger>
-            Delete
+      width: 180,
+      render: (_, record) => (
+        <>
+          <Button
+            key="edit"
+            type="link"
+            size="small"
+            onClick={() => {
+              setEditingRecord(record);
+              editForm.setFieldsValue(record);
+              setEditModalVisible(true);
+            }}
+          >
+            <FormattedMessage id="pages.common.edit" defaultMessage="Edit" />
           </Button>
-        </Popconfirm>,
-      ],
+          <Popconfirm
+            key="delete"
+            title={
+              <FormattedMessage
+                id="pages.deviceGroups.deleteConfirm"
+                defaultMessage="Are you sure to delete this device group?"
+              />
+            }
+            onConfirm={() => handleDelete(record.guid)}
+          >
+            <Button type="link" size="small" danger>
+              <FormattedMessage id="pages.common.delete" defaultMessage="Delete" />
+            </Button>
+          </Popconfirm>
+        </>
+      ),
     },
   ];
 
   return (
     <PageContainer>
       <ProTable<API.DeviceGroupItem>
-        headerTitle={intl.formatMessage({
-          id: 'pages.deviceGroups.list',
-          defaultMessage: 'Device Groups',
-        })}
+        headerTitle={
+          <FormattedMessage id="pages.deviceGroups.list" defaultMessage="Device Groups" />
+        }
+        actionRef={actionRef}
         rowKey="guid"
         request={async (params) => {
           const result = await getDeviceGroupList({
@@ -98,30 +159,63 @@ const DeviceGroupList: React.FC = () => {
           };
         }}
         columns={columns}
+        search={false}
+        pagination={{
+          defaultPageSize: 10,
+          showSizeChanger: true,
+          showQuickJumper: true,
+        }}
         toolBarRender={() => [
-          <Button
-            key="create"
-            type="primary"
-            onClick={() => setCreateModalVisible(true)}
-          >
-            {intl.formatMessage({
-              id: 'pages.deviceGroups.create',
-              defaultMessage: 'Create Device Group',
-            })}
+          <Button key="create" type="primary" onClick={() => setCreateModalVisible(true)}>
+            <FormattedMessage
+              id="pages.deviceGroups.create"
+              defaultMessage="Create Device Group"
+            />
           </Button>,
         ]}
       />
 
       <Modal
-        title={intl.formatMessage({
-          id: 'pages.deviceGroups.create',
-          defaultMessage: 'Create Device Group',
-        })}
+        title={
+          <FormattedMessage id="pages.deviceGroups.create" defaultMessage="Create Device Group" />
+        }
         open={createModalVisible}
         onCancel={() => setCreateModalVisible(false)}
         onOk={() => createForm.submit()}
       >
         <Form form={createForm} onFinish={handleCreate}>
+          <Form.Item
+            name="name"
+            label="Name"
+            rules={[{ required: true, message: 'Please enter name' }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item name="note" label="Note">
+            <Input.TextArea />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={
+          <FormattedMessage id="pages.deviceGroups.edit" defaultMessage="Edit Device Group" />
+        }
+        open={editModalVisible}
+        onCancel={() => {
+          setEditModalVisible(false);
+          setEditingRecord(null);
+        }}
+        onOk={() => editForm.submit()}
+      >
+        <Form
+          form={editForm}
+          onFinish={(values) => {
+            if (editingRecord) {
+              handleEdit(editingRecord.guid, values);
+            }
+          }}
+        >
           <Form.Item
             name="name"
             label="Name"
