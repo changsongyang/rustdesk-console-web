@@ -1,5 +1,6 @@
 export default {
   '/api/auth_routes': {
-    '/form/advanced-form': { authority: ['admin', 'user'] },
+    '/users': { authority: ['admin'] },
+    '/audits': { authority: ['admin'] },
   },
 };
