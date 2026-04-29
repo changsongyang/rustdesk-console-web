@@ -16,6 +16,7 @@ import {
   updateTagColor,
   deleteTag,
 } from '@/services/rustdesk-console/addressBook';
+import DeviceSelectTable from '@/components/DeviceSelectTable';
 
 const { Text } = Typography;
 
@@ -34,6 +35,9 @@ const PersonalAddressBook: React.FC = () => {
   const [editPeerModalVisible, setEditPeerModalVisible] = useState(false);
   const [addTagModalVisible, setAddTagModalVisible] = useState(false);
   const [tagManagementVisible, setTagManagementVisible] = useState(false);
+  const [importDevicesModalVisible, setImportDevicesModalVisible] = useState(false);
+  const [selectedDeviceKeys, setSelectedDeviceKeys] = useState<React.Key[]>([]);
+  const [importing, setImporting] = useState(false);
   
   const [addPeerForm] = Form.useForm();
   const [editPeerForm] = Form.useForm();
@@ -258,6 +262,41 @@ const PersonalAddressBook: React.FC = () => {
           id: 'pages.addressBook.tagDeleteFailed',
           defaultMessage: 'Failed to delete tag',
         }),
+      );
+    }
+  };
+
+  const handleImportDevices = async () => {
+    if (!abGuid || selectedDeviceKeys.length === 0) return;
+    setImporting(true);
+    let successCount = 0;
+    let failCount = 0;
+    for (const deviceId of selectedDeviceKeys) {
+      try {
+        await addPeer(abGuid, { id: deviceId as string });
+        successCount++;
+      } catch {
+        failCount++;
+      }
+    }
+    setImporting(false);
+    setImportDevicesModalVisible(false);
+    setSelectedDeviceKeys([]);
+    if (successCount > 0) {
+      msgApi.success(
+        intl.formatMessage(
+          { id: 'pages.addressBook.importSuccess', defaultMessage: 'Successfully imported {count} device(s)' },
+          { count: successCount }
+        )
+      );
+      actionRef.current?.reload();
+    }
+    if (failCount > 0) {
+      msgApi.warning(
+        intl.formatMessage(
+          { id: 'pages.addressBook.importPartialFailed', defaultMessage: '{count} device(s) failed to import' },
+          { count: failCount }
+        )
       );
     }
   };
@@ -651,7 +690,7 @@ const PersonalAddressBook: React.FC = () => {
           <Button key="add" type="primary" icon={<PlusOutlined />} onClick={() => setAddPeerModalVisible(true)}>
             <FormattedMessage id="pages.addressBook.addPeer" defaultMessage="Add" />
           </Button>,
-          <Button key="import" icon={<SelectOutlined />}>
+          <Button key="import" icon={<SelectOutlined />} onClick={() => setImportDevicesModalVisible(true)}>
             <FormattedMessage id="pages.addressBook.import" defaultMessage="Import" />
           </Button>,
           <Button key="recycle" icon={<DeleteOutlined />}>
@@ -796,6 +835,24 @@ const PersonalAddressBook: React.FC = () => {
           rowKey="name"
           pagination={false}
           size="middle"
+        />
+      </Modal>
+
+      {/* Import Devices Modal */}
+      <Modal
+        title={<FormattedMessage id="pages.addressBook.importDevices" defaultMessage="Import Devices" />}
+        open={importDevicesModalVisible}
+        onCancel={() => {
+          setImportDevicesModalVisible(false);
+          setSelectedDeviceKeys([]);
+        }}
+        onOk={handleImportDevices}
+        okButtonProps={{ loading: importing, disabled: selectedDeviceKeys.length === 0 }}
+        width={1000}
+      >
+        <DeviceSelectTable
+          selectedRowKeys={selectedDeviceKeys}
+          onSelectionChange={setSelectedDeviceKeys}
         />
       </Modal>
     </PageContainer>
