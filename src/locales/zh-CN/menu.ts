@@ -20,7 +20,8 @@ export default {
   'menu.groups': '组管理',
   'menu.groups.user': '用户组',
   'menu.groups.device': '设备组',
-  'menu.settings': '系统设置',
+  'menu.settings': '设置',
+  'menu.settings.smtp': 'SMTP 配置',
   'menu.customClients': '自定义客户端',
   'menu.addressBooks': '地址簿',
 };

@@ -1,4 +1,4 @@
-﻿export default [
+export default [
   {
     path: '/user',
     layout: false,
@@ -158,7 +158,18 @@
     name: 'settings',
     icon: 'setting',
     access: 'canAdmin',
-    component: './settings',
+    routes: [
+      {
+        path: '/settings',
+        redirect: '/settings/smtp',
+      },
+      {
+        name: 'smtp',
+        icon: 'mail',
+        path: '/settings/smtp',
+        component: './settings/smtp',
+      },
+    ],
   },
   {
     path: '/',
