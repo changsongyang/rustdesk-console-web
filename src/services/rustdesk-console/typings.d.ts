@@ -54,6 +54,11 @@ declare namespace API {
     total: number;
   };
 
+  type ResponseResult = {
+    succ?: boolean;
+    [key: string]: any;
+  };
+
   type UserItem = {
     guid: string;
     name: string;
@@ -225,6 +230,7 @@ declare namespace API {
     peerId?: string;
     peerName?: string;
     type?: number;
+    note?: string;
     createdAt?: string;
     requestedAt?: string;
     establishedAt?: string;

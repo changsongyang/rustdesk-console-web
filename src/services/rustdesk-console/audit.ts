@@ -4,9 +4,10 @@ export async function getConnectionAudits(
   params: {
     current?: number;
     pageSize?: number;
-    remote?: string;
-    conn_type?: number;
-    created_at?: string;
+    deviceId?: string;
+    type?: number;
+    startTime?: string;
+    endTime?: string;
   },
   options?: { [key: string]: any },
 ) {
@@ -61,6 +62,28 @@ export async function getConsoleAudits(
   return request<API.PaginatedResult<API.ConsoleAuditItem>>('/api/audits/console', {
     method: 'GET',
     params,
+    ...(options || {}),
+  });
+}
+
+export async function updateConnectionAudit(
+  data: { id?: number; note?: string },
+  options?: { [key: string]: any },
+) {
+  return request<API.ResponseResult>('/api/audits/conn', {
+    method: 'PUT',
+    data,
+    ...(options || {}),
+  });
+}
+
+export async function disconnectConnection(
+  connId: string,
+  options?: { [key: string]: any },
+) {
+  return request<API.ResponseResult>('/api/audits/conn/disconnect', {
+    method: 'POST',
+    data: { connId },
     ...(options || {}),
   });
 }
