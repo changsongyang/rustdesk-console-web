@@ -184,14 +184,11 @@ const ConnectionAudit: React.FC = () => {
     fields: API.ConnectionAuditItem,
     old: API.ConnectionAuditItem,
   ) => {
-    const data: Record<string, any> = { id: old.id };
-    if ((fields.note || '') !== (old.note || '')) {
-      data.note = fields.note;
-    }
-    if (Object.keys(data).length === 1) return true;
+    if (!old.id) return false;
+    if ((fields.note || '') === (old.note || '')) return true;
 
     try {
-      await updateConnectionAudit(data);
+      await updateConnectionAudit(old.id, { note: fields.note || '' });
       msgApi.success(
         intl.formatMessage({
           id: 'pages.audits.updateSuccess',
@@ -780,6 +777,7 @@ const ConnectionAudit: React.FC = () => {
         open={editModalVisible}
         width={400}
         initialValues={currentRow}
+        modalProps={{ destroyOnClose: true }}
         onOpenChange={setEditModalVisible}
         onFinish={async (value) => {
           const success = await handleUpdateNote(
