@@ -389,9 +389,24 @@ declare namespace API {
 
   type SystemInfo = {
     version?: string;
-    latestVersion?: string;
-    releaseUrl?: string;
     [key: string]: any;
+  };
+
+  type UpdateCheckParams = {
+    frontend_version: string;
+  };
+
+  type UpdateCheckComponent = {
+    has_update: boolean;
+    version?: string;
+    release_url?: string;
+    release_note?: string;
+    published_at?: string;
+  };
+
+  type UpdateCheckResult = {
+    backend: API.UpdateCheckComponent;
+    frontend: API.UpdateCheckComponent;
   };
 
   type LicenseInfo = {

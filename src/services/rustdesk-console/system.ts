@@ -14,6 +14,14 @@ export async function getLicenseStatus(options?: { [key: string]: any }) {
   });
 }
 
+export async function checkUpdate(params: API.UpdateCheckParams, options?: { [key: string]: any }) {
+  return request<API.UpdateCheckResult>('/api/update-check', {
+    method: 'POST',
+    data: params,
+    ...(options || {}),
+  });
+}
+
 export async function downloadConfig(options?: { [key: string]: any }) {
   return request('/api/config/download', {
     method: 'GET',

@@ -88,3 +88,4 @@ export {
   unassignStrategy,
   getStrategyAssignments,
 } from './strategy';
+export { getSystemInfo, getLicenseStatus, checkUpdate } from './system';
