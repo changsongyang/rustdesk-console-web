@@ -3,6 +3,7 @@ import { defineConfig } from '@umijs/max';
 import defaultSettings from './defaultSettings';
 import proxy from './proxy';
 import routes from './routes';
+import { version } from '../package.json';
 
 const { REACT_APP_ENV = 'dev' } = process.env;
 
@@ -54,5 +55,6 @@ export default defineConfig({
   requestRecord: {},
   define: {
     'process.env.CI': process.env.CI,
+    FRONTEND_VERSION: version,
   },
 });
